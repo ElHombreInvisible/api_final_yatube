@@ -1,15 +1,12 @@
 # TODO:  Напишите свой вариант
 from django.shortcuts import get_object_or_404
-from posts.models import Comment, Follow, Group, Post, User
+from posts.models import Comment, Follow, Group, Post
 from rest_framework import filters, permissions, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import LimitOffsetPagination
 
 from .serializers import CommentSerializer, FollowSerializer
 from .serializers import GroupSerializer, PostSerializer
-
-from rest_framework import status
-from rest_framework.response import Response
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -73,16 +70,5 @@ class FollowViewSet(viewsets.ModelViewSet):
         follows_queryset = Follow.objects.filter(user=self.request.user)
         return follows_queryset
 
-    def create(self, request):
-        print(request.data)
-        author = User.objects.get(username=self.request.data.get('following'))
-        follow = Follow.objects.get_or_create(user=self.request.user,
-                                              following=author)
-        serializer = self.serializer_class(data=follow)
-        if serializer.is_valid():
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,  status=status.HTTP_400_BAD_REQUEST)
-
-
-'''    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)'''
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
