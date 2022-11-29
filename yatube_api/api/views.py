@@ -2,7 +2,6 @@
 from django.shortcuts import get_object_or_404
 from posts.models import Comment, Follow, Group, Post
 from rest_framework import filters, mixins, permissions, viewsets
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import LimitOffsetPagination
 
 from .permissions import OwnerOrReadOnly, ReadOnly
@@ -15,27 +14,15 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (OwnerOrReadOnly,) 
+    permission_classes = (OwnerOrReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
     def get_permissions(self):
-    # Если в GET-запросе требуется получить информацию об объекте
         if self.action == 'retrieve':
-        # Вернем обновленный перечень используемых пермишенов
             return (ReadOnly(),)
-    # Для остальных ситуаций оставим текущий перечень пермишенов без изменений
-        return super().get_permissions() 
-'''    def perform_destroy(self, instance):
-        if self.request.user != instance.author:
-            raise PermissionDenied('Удаление чужого контента запрещено!')
-        return super().perform_destroy(instance)
-
-    def perform_update(self, serializer):
-        if self.request.user != serializer.instance.author:
-            raise PermissionDenied('Изменение чужого контента запрещено!')
-        return super().perform_update(serializer)'''
+        return super().get_permissions()
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -59,24 +46,11 @@ class CommentViewSet(viewsets.ModelViewSet):
                         post_id=self.kwargs.get('post_id'))
 
     def get_permissions(self):
-    # Если в GET-запросе требуется получить информацию об объекте
         if self.action == 'retrieve':
-        # Вернем обновленный перечень используемых пермишенов
             return (ReadOnly(),)
-    # Для остальных ситуаций оставим текущий перечень пермишенов без изменений
         return super().get_permissions()
-'''    def perform_update(self, serializer):
-        if serializer.instance.author != self.request.user:
-            raise PermissionDenied('Измение чужого контента запрещено!')
-        return super().perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        if instance.author != self.request.user:
-            raise PermissionDenied('Удаление чужого контента запрещено!')
-        return super().perform_destroy(instance)'''
 
 
-#class FollowViewSet(viewsets.ModelViewSet):
 class FollowViewSet(mixins.CreateModelMixin,
                     mixins.RetrieveModelMixin,
                     mixins.ListModelMixin,
